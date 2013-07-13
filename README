@@ -1,0 +1,2 @@
+python create_subset.py > results.txt
+python em.py

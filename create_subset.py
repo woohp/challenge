@@ -13,13 +13,10 @@ def main(args):
     users = []
     reviews = []
 
-    print 'reading busineses...'
     businesses = [json.loads(line) for line in business_file]
 
-    print 'reading users...'
     users = [json.loads(line) for line in user_file]
 
-    print 'reading reviews...'
     reviews1 = defaultdict(list) # key is user_id
     reviews2 = defaultdict(list) # key is business_id
     for line in review_file:
@@ -31,13 +28,11 @@ def main(args):
     num_users = 50
     num_businesses = 50
 
-    print 'creating subsets'
     users_subset = []
     businesses_subset = []
     reviews_subset = []
     random.seed(5)
     while 1:
-        
         if len(users_subset) < num_users:
             while 1:
                 if len(users_subset) == 0 or random.random() < len(users_subset) / num_users * 10:
@@ -82,11 +77,20 @@ def main(args):
                 user_id_index = user_id_indices[user_id]
                 reviews_subset_matrix[business_id_index][user_id_index] = review['stars']
 
-    print len(set(users_subset))
-    print len(set(businesses_subset))
-    print len(set(reviews_subset))
-    for row in reviews_subset_matrix:
-        print row
+    for user_id in users_subset:
+        print user_id
+    print
+    for business_id in businesses_subset:
+        print business_id
+    print
+    for user_id, business_id, stars in reviews_subset:
+        print user_id, business_id, stars
+
+#    print len(set(users_subset))
+#    print len(set(businesses_subset))
+#    print len(set(reviews_subset))
+#    for row in reviews_subset_matrix:
+#        print row
     
 
 if __name__ == '__main__':

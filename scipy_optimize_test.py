@@ -62,13 +62,10 @@ def prob_x(x, z_val):
         mu = 1
         theta = theta_1
         prob_z = beta
-    theta_sq = theta ** 2
-    return (1 / (theta*math.sqrt(2*math.pi))) * math.exp(-(x-mu) / (2*theta_sq)) * prob_z
+    return norm.pdf(x, loc=mu, scale=theta) * prob_z
 
 def prob_w(w):
-    alpha_sq = alpha ** 2
-    return (1 / (alpha*math.sqrt(2*math.pi))) * math.exp(-(w-1) / (2*alpha_sq))
+    return norm.pdf(w, loc=1, scale=alpha)
 
 def prob_t(t):
-    gamma_sq = gamma ** 2
-    return (1 / (gamma*math.sqrt(2*math.pi))) * math.exp(-t / (2*gamma_sq))
+    return norm.pdf(t, loc=0, scale=gamma)

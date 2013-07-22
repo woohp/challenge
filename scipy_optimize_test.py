@@ -13,7 +13,6 @@ fmin_cg:
             grad_calls = Number of gradient calls made
             warnflag = Warnings (0 = success, 1 = max iter reached, 2 = gradient and/or function calls were not changing)
 '''
-import math
 import numpy
 from scipy.stats import norm
 
@@ -29,43 +28,51 @@ beta = 0.5
 gamma = 3
 alpha = 3
 
-def objective(vec, *args):
+
+def objective(vec):
     x_size = N*D
     w_size = M*D
-    t_size = M
 
     x = vec[:x_size]
     w = vec[x_size:x_size+w_size]
     t = vec[x_size+w_size:]
 
-    x_section = numpy.sum(numpy.log(numpy.array([prob_x(x_i, 0) + prob_x(x_i, 1) for x_i in x])))
-    w_section = numpy.sum(numpy.log(numpy.array(map(prob_w, w))))
-    t_section = numpy.sum(numpy.log(numpy.array(map(prob_t, t))))
+    prob_x_0 = norm.pdf(x, loc=-1, scale=theta_0) * (1 - beta)
+    prob_x_1 = norm.pdf(x, loc=1, scale=theta_1) * beta
+    x_section = numpy.sum(numpy.log(prob_x_0 + prob_x_1))
+    w_section = numpy.sum(numpy.log(norm.pdf(w, loc=1, scale=alpha)))
+    t_section = numpy.sum(numpy.log(norm.pdf(t, loc=0, scale=gamma)))
 
     l_section = 0
-    for i in range(N):
-        for j in range(M):
-            # Note: A is the annotator image response matrix (N x M)
-            if A[i][j] is not None:
-                w_dot_x = numpy.dot(w[j*D:(j+1)*D], x[i*D:(i+1)*D])
-                cdf_val = norm.cdf(w_dot_x-t[j])
-                l_section += A[i][j] * math.log(cdf_val) + \
-                             (1-A[i][j]) * math.log(1-cdf_val)
+    # Note: A is the annotator image response matrix (M x N)
+    for i in xrange(M):
+        x_i = x[i*D:(i+1)*D]
+
+        for j in xrange(N):
+            l = A[i, j]
+            if l == None: continue
+
+            w_j = w[j*D:(j+1)*D]
+            w_dot_x = numpy.dot(w_j, x_i)
+            cdf_val = norm.cdf(w_dot_x-t[j])
+            if l == 1:
+                l_section += numpy.log(cdf_val)
+            else:
+                l_section += numpy.log(1-cdf_val)
+
     return x_section + w_section + t_section + l_section
 
-def prob_x(x, z_val):
-    if z_val == 0:
-        mu = -1
-        theta = theta_0
-        prob_z = 1 - beta
-    else:
-        mu = 1
-        theta = theta_1
-        prob_z = beta
-    return norm.pdf(x, loc=mu, scale=theta) * prob_z
 
-def prob_w(w):
-    return norm.pdf(w, loc=1, scale=alpha)
-
-def prob_t(t):
-    return norm.pdf(t, loc=0, scale=gamma)
+if __name__ == '__main__':
+    A = numpy.array([
+        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1] ])
+    print objective(numpy.zeros(N*D + M*D + M))

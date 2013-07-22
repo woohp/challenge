@@ -44,21 +44,17 @@ def objective(vec):
     t_section = numpy.sum(numpy.log(norm.pdf(t, loc=0, scale=gamma)))
 
     l_section = 0
-    # Note: A is the annotator image response matrix (M x N)
-    for i in xrange(M):
+    # Note: A is matrix of size (L, 3) where L is the number of labels. It is the array of (i, j, l)
+    for i, j, l in A:
         x_i = x[i*D:(i+1)*D]
+        w_j = w[j*D:(j+1)*D]
+        w_dot_x = numpy.dot(w_j, x_i)
+        cdf_val = norm.cdf(w_dot_x-t[j])
+        if l == 1:
+            l_section += numpy.log(cdf_val)
+        else:
+            l_section += numpy.log(1-cdf_val)
 
-        for j in xrange(N):
-            l = A[i, j]
-            if l == None: continue
-
-            w_j = w[j*D:(j+1)*D]
-            w_dot_x = numpy.dot(w_j, x_i)
-            cdf_val = norm.cdf(w_dot_x-t[j])
-            if l == 1:
-                l_section += numpy.log(cdf_val)
-            else:
-                l_section += numpy.log(1-cdf_val)
 
     return x_section + w_section + t_section + l_section
 
@@ -75,4 +71,5 @@ if __name__ == '__main__':
         [0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
         [1, 0, 0, 0, 0, 0, 0, 0, 0, 1] ])
+    A = numpy.array([(i, j, A[i, j]) for i in xrange(A.shape[0]) for j in xrange(A.shape[1])])
     print objective(numpy.zeros(N*D + M*D + M))
